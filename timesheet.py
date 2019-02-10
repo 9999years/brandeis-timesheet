@@ -16,7 +16,10 @@ DOCUMENT_PREFIX = r'''
 \begin{document}
 '''.lstrip()
 
-DOCUMENT_SUFFIX = r'''\end{document}'''
+# note leading and trailing linebreaks
+DOCUMENT_SUFFIX = r'''
+\end{document}
+'''
 
 
 class Weekday(enum.Enum):
@@ -68,8 +71,8 @@ class Calendar:
     conferenceProperties: dict = field(default_factory=dict)
 
 
-WEEK_START = Weekday.SATURDAY
-WEEK_END = Weekday.FRIDAY
+WEEK_START = Weekday.MONDAY
+WEEK_END = Weekday.SUNDAY
 
 
 def date_range(start: datetime, end: datetime) -> Iterator[datetime]:
@@ -161,6 +164,16 @@ def format_time(dt: datetime) -> str:
         return dt.strftime('%I:%M%p').lstrip('0').lower()
 
 
+def format_float(f: float) -> str:
+    if f.is_integer():
+        f = int(f)
+    return str(f)
+
+
+def format_timedelta(td: timedelta) -> str:
+    return format_float(td.seconds / 3600)
+
+
 def timesheet_data(during=None) -> dict:
     start, end = work_week(during)
     events = work_events(start, end)
@@ -180,24 +193,31 @@ def timesheet_data(during=None) -> dict:
         'employeeSignature': config('SIGNATURE'),
         'dept': config('DEPARTMENT'),
         'payRate': config('PAY_RATE'),
+        'start': start.date().isoformat(),
+        'end': end.date().isoformat(),
     }
 
+    total = timedelta()
     for day in date_range(start, end):
-        abbr = Weekday.from_datetime(day)
+        abbr = Weekday.from_datetime(day).abbr
         today_events = filter_events(day)
         inTimes = []
         outTimes = []
-        total = timedelta()
+        day_total = timedelta()
         for event in today_events:
             start, end = event_time(event)
             inTimes.append(format_time(start))
             outTimes.append(format_time(end))
-            total += end - start
-        ret[abbr + 'Date'] = day.date().isoformat()
-        ret[abbr + 'In'] = ', '.join(inTimes)
-        ret[abbr + 'Out'] = ', '.join(outTimes)
-        ret[abbr + 'Total'] = str(total.seconds / 3600)
+            day_total += end - start
 
+        ret[abbr + 'Date'] = day.date().isoformat()
+        total += day_total
+        if day_total:
+            ret[abbr + 'In'] = ', '.join(inTimes)
+            ret[abbr + 'Out'] = ', '.join(outTimes)
+            ret[abbr + 'Total'] = format_timedelta(day_total)
+
+    ret['totalHours'] = format_timedelta(total)
     return ret
 
 
@@ -231,6 +251,9 @@ def timesheet_doc(data: dict, cmd_name='timesheet') -> str:
 
 
 def main():
+    import sys
+    sys.stdin.reconfigure(encoding='utf-8')
+    sys.stdout.reconfigure(encoding='utf-8')
     print(timesheet_doc(timesheet_data()))
 
 

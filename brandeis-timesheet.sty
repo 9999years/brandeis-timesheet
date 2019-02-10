@@ -66,7 +66,7 @@
 	\vspace{-1em}%
 
 	\noindent
-	\begin{tabu} to \linewidth {@{}|X[4]X[3]|@{}}
+	\begin{tabu} to \linewidth {@{}|>{\raggedright}X[4]>{\raggedright}X[3]|@{}}
 	\hline
 	\rowfont[l]{\bfseries}
 	\rowcolor{black!20}
@@ -124,7 +124,7 @@
 	\begingroup
 	\newcommand{\signature}[1]{\@ifundefined{cmdKV@timesheet@##1}{}{%
 		\edef\@fname{\csname cmdKV@timesheet@##1\endcsname}
-		\raisebox{-0.75em}{\rlap{\smash{\includegraphics[width=1.5in]{\@fname}}}}}}%
+		\raisebox{-0.5em}{\rlap{\smash{\includegraphics[width=1.5in]{\@fname}}}}}}%
 
 	Employee:
 	\signature{employeeSignature}
