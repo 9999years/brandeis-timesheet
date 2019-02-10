@@ -10,6 +10,14 @@ from decouple import config
 
 import creds
 
+DOCUMENT_PREFIX = r'''
+\documentclass[12pt]{article}
+\usepackage{brandeis-timesheet}
+\begin{document}
+'''.lstrip()
+
+DOCUMENT_SUFFIX = r'''\end{document}'''
+
 
 class Weekday(enum.Enum):
     """
@@ -94,7 +102,7 @@ def work_week(during: datetime = None) -> Tuple[datetime, datetime]:
 
 @functools.lru_cache()
 def calendars() -> List[Calendar]:
-    _, _, service = creds.build_creds()
+    service = creds.build_service()
     return [Calendar(**cal)
             for cal
             in service.calendarList().list().execute()['items']]
@@ -128,7 +136,7 @@ def events(calendar_id: str, start: datetime, end: datetime, **kwargs) -> List[d
     }
 
     args.update(kwargs)
-    _, _, service = creds.build_creds()
+    service = creds.build_service()
     events = service.events().list(**args).execute()
     return events.get('items', [])
 
@@ -146,8 +154,15 @@ def event_time(event: dict) -> Tuple[datetime, datetime]:
             datetime.fromisoformat(event['end']['dateTime']))
 
 
-def timesheet_data() -> dict:
-    start, end = work_week()
+def format_time(dt: datetime) -> str:
+    if dt.minute == 0:
+        return dt.strftime('%I%p').lstrip('0').lower()
+    else:
+        return dt.strftime('%I:%M%p').lstrip('0').lower()
+
+
+def timesheet_data(during=None) -> dict:
+    start, end = work_week(during)
     events = work_events(start, end)
 
     def filter_events(day: datetime):
@@ -155,7 +170,7 @@ def timesheet_data() -> dict:
 
         def time_in_day(event: dict):
             start, _ = event_time(event)
-            return start >= day and start <= day_end
+            return day <= start <= day_end
 
         return filter(time_in_day, events)
 
@@ -167,8 +182,57 @@ def timesheet_data() -> dict:
         'payRate': config('PAY_RATE'),
     }
 
-    today_data = {}
     for day in date_range(start, end):
-        abbr = Weekday.from_int(day.weekday())
+        abbr = Weekday.from_datetime(day)
         today_events = filter_events(day)
+        inTimes = []
+        outTimes = []
+        total = timedelta()
+        for event in today_events:
+            start, end = event_time(event)
+            inTimes.append(format_time(start))
+            outTimes.append(format_time(end))
+            total += end - start
+        ret[abbr + 'Date'] = day.date().isoformat()
+        ret[abbr + 'In'] = ', '.join(inTimes)
+        ret[abbr + 'Out'] = ', '.join(outTimes)
+        ret[abbr + 'Total'] = str(total.seconds / 3600)
 
+    return ret
+
+
+def tex_escape(s: str) -> str:
+    """
+    Escapes a string for use in a LaTeX document
+    """
+    # characters that have to be escaped manually
+    for c in '\\~^':
+        s = s.replace(c, '\\char"' + format(ord(c), 'X'))
+    # characters that can be escaped regularly
+    for c in '&%$#_{}':
+        s = s.replace(c, '\\' + c)
+    return s
+
+
+def timesheet_cmd(data: dict, cmd_name='timesheet') -> str:
+    keyvals = []
+    for key, val in data.items():
+        val = tex_escape(val)
+        if ',' in val:
+            val = '{' + val + '}'
+        keyvals.append('\t' + key + '=' + val + ',\n')
+    return '\\' + cmd_name + '{\n' + ''.join(keyvals) + '}'
+
+
+def timesheet_doc(data: dict, cmd_name='timesheet') -> str:
+    return (DOCUMENT_PREFIX
+            + timesheet_cmd(data, cmd_name)
+            + DOCUMENT_SUFFIX)
+
+
+def main():
+    print(timesheet_doc(timesheet_data()))
+
+
+if __name__ == '__main__':
+    main()

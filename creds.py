@@ -35,5 +35,10 @@ def build_creds(api='calendar', version='v3'):
     return creds, http, service
 
 
+def build_service(api='calendar', version='v3'):
+    creds, http, service = build_creds(api, version)
+    return service
+
+
 if __name__ == '__main__':
     print(credentials())
