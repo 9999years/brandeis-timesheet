@@ -15,16 +15,29 @@ class Weekday(enum.Enum):
     """
     Corresponds with the datetime.weekday() method
     """
-    MONDAY = 0
-    TUESDAY = 1
-    WEDNESDAY = 2
-    THURSDAY = 3
-    FRIDAY = 4
-    SATURDAY = 5
-    SUNDAY = 6
+    MONDAY = (0, 'mon')
+    TUESDAY = (1, 'tues')
+    WEDNESDAY = (2, 'wed')
+    THURSDAY = (3, 'thurs')
+    FRIDAY = (4, 'fri')
+    SATURDAY = (5, 'sat')
+    SUNDAY = (6, 'sun')
 
     def __int__(self):
-        return self.value
+        return self.value[0]
+
+    @property
+    def abbr(self):
+        return self.value[1]
+
+    @classmethod
+    def from_int(cls, weekday: int):
+        return next(filter(lambda wd: int(wd) == weekday,
+                           cls.__members__.values()))
+
+    @classmethod
+    def from_datetime(cls, dt: datetime):
+        return cls.from_int(dt.weekday())
 
 
 @dataclass
@@ -137,7 +150,7 @@ def timesheet_data() -> dict:
     start, end = work_week()
     events = work_events(start, end)
 
-    def day_events(day: datetime):
+    def filter_events(day: datetime):
         day_end = day + timedelta(hours=24)
 
         def time_in_day(event: dict):
@@ -154,5 +167,8 @@ def timesheet_data() -> dict:
         'payRate': config('PAY_RATE'),
     }
 
+    today_data = {}
     for day in date_range(start, end):
-        print(day)
+        abbr = Weekday.from_int(day.weekday())
+        today_events = filter_events(day)
+
