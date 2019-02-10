@@ -1,0 +1,142 @@
+\usepackage[letterpaper, margin=1in]{geometry}
+\usepackage{fontspec}
+\usepackage{tabu}
+\usepackage{xcolor}
+\usepackage{colortbl}
+\usepackage{graphicx}
+\usepackage{xkeyval}
+
+\setmainfont{Arial}
+
+\newcommand{\upb}[1]{\textbf{\MakeUppercase{#1}}}
+\newcommand{\header}[1]{\textbf{\Large #1}%
+	\par\vspace{0.25em}\hrule height 1pt \vspace{-0.75em}}
+
+\def\hrulefill{\leavevmode\leaders\hrule height 1pt\hfill\kern\z@}
+\newcommand\dunderline[3][-1pt]{{%
+  \setbox0=\hbox{#3}
+  \ooalign{\copy0\cr\rule[\dimexpr#1-#2\relax]{\wd0}{#2}}}}
+\newcommand{\filledin}[2][5em]{\dunderline{1pt}{\rlap{#2}\hskip\dimexpr#1}}
+
+\define@cmdkeys{timesheet}{start, end, name, totalHours,
+	ssn, employeeID, hireDate, dept, deptID, payGroup, payRate,
+	supervisor, employeeSignature, supervisorSignature,
+	% -----
+	monDate, monIn, monOut, monTotal,
+	tuesDate, tuesIn, tuesOut, tuesTotal,
+	wedDate, wedIn, wedOut, wedTotal,
+	thursDate, thursIn, thursOut, thursTotal,
+	friDate, friIn, friOut, friTotal,
+	satDate, satIn, satOut, satTotal,
+	sunDate, sunIn, sunOut, sunTotal,
+	}
+
+\presetkeys{timesheet}{
+	ssn={},
+	employeeID={},
+	hireDate={},
+	dept={},
+	deptID={},
+	payGroup={},
+	payRate={},
+	supervisor={},
+}{}
+\newcommand{\timesheet}[1]{%
+	\setkeys{timesheet}{#1}%
+	\thispagestyle{empty}%
+	\setlength{\parindent}{0.1in}%
+	\setlength{\parskip}{1em}%
+	\setlength{\arrayrulewidth}{1pt}%
+
+	\begin{center}%
+		\Large\upb{Brandeis University}%
+	\end{center}%
+
+	\header{\MakeUppercase{Employee Timesheet}}%
+	\noindent
+	{\footnotesize this timesheet should be used when employee does not show up
+	in time collection system.}
+
+	\textbf{Reporting period \filledin[6em]{\cmdKV@timesheet@start} through
+		\filledin[6em]{\cmdKV@timesheet@end}}%
+
+	\vspace{1em}%
+
+	Fill out as much as the information below as possible.
+	\vspace{-1em}%
+
+	\noindent
+	\begin{tabu} to \linewidth {@{}|X[4]X[3]|@{}}
+	\hline
+	\rowfont[l]{\bfseries}
+	\rowcolor{black!20}
+	Personal Data & Job Data \\
+	\hline
+	Name: \cmdKV@timesheet@name              & Department: \cmdKV@timesheet@dept \\
+	SSN: \cmdKV@timesheet@ssn                & Dept.\ ID: \cmdKV@timesheet@deptID \\
+	Employee ID: \cmdKV@timesheet@employeeID & Paygroup: \cmdKV@timesheet@payGroup \\
+	Date of Hire: \cmdKV@timesheet@hireDate  & Rate: \cmdKV@timesheet@payRate \\
+	                                         & Supervisor: \cmdKV@timesheet@supervisor \\
+	\hline
+	\end{tabu}
+
+	\vspace{0.5em}%
+	{\large Time Entry}%
+	\vspace{-1em}%
+
+	\begingroup
+	\newcommand{\key}[1]{\@ifundefined{cmdKV@timesheet@##1}{}{%
+		\csname cmdKV@timesheet@##1\endcsname}}%
+	\newcommand{\dayRow}[2]{##1 & \key{##2Date} & \key{##2In} & \key{##2Out} &
+		\key{##2Total} \\}%
+	\noindent
+	\begin{tabu} to \linewidth{@{}|X|X|X|X|X|@{}}
+	\hline
+	\everyrow{\hline}
+		& Date & Time In & Time Out & Total \\
+		&      &         &          & \\
+		\dayRow{Monday}{mon}
+		\dayRow{Tuesday}{tues}
+		\dayRow{Wednesday}{wed}
+		\dayRow{Thursday}{thurs}
+		\dayRow{Friday}{fri}
+		\dayRow{Saturday}{sat}
+		\dayRow{Sunday}{sun}
+	\end{tabu}
+	\endgroup
+
+	\begin{flushright}%
+		\noindent
+		\textbf{Total Hours Worked:
+			\filledin{\cmdKV@timesheet@totalHours}}%
+		\mbox{\hskip 1em}%
+	\end{flushright}%
+
+	\noindent
+	\header{Signatures}%
+
+	\noindent
+	We certify that this report correctly reflects all time worked for the
+	period.
+
+	\vspace{4em}%
+
+	\begingroup
+	\newcommand{\signature}[1]{\@ifundefined{cmdKV@timesheet@##1}{}{%
+		\edef\@fname{\csname cmdKV@timesheet@##1\endcsname}
+		\raisebox{-0.75em}{\rlap{\smash{\includegraphics[width=1.5in]{\@fname}}}}}}%
+
+	Employee:
+	\signature{employeeSignature}
+	\rule{0.75\linewidth}{1pt}%
+
+	\vspace{1.5em}
+
+	Supervisor:
+	\signature{supervisorSignature}%
+	\rule{0.75\linewidth}{1pt}%
+	\endgroup
+
+	{\footnotesize Return to Payroll (MS110) no later than \textbf{12 noon} on
+	the Tuesday following the payperiod.}%
+}
