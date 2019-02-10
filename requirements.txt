@@ -1,4 +1,6 @@
 google-api-python-client
+oauth2client
 requests
 BeautifulSoup4
 python-decouple
+httplib2
