@@ -167,7 +167,7 @@ def format_time(dt: datetime) -> str:
 def format_float(f: float) -> str:
     if f.is_integer():
         f = int(f)
-    return str(f)
+    return str(round(f, 3))
 
 
 def format_timedelta(td: timedelta) -> str:
@@ -193,6 +193,7 @@ def timesheet_data(during=None) -> dict:
         'employeeSignature': config('SIGNATURE'),
         'dept': config('DEPARTMENT'),
         'payRate': config('PAY_RATE'),
+        'hireDate': config('HIRE_DATE'),
         'start': start.date().isoformat(),
         'end': end.date().isoformat(),
     }

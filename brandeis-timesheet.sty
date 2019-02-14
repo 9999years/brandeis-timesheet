@@ -1,5 +1,6 @@
 \usepackage[letterpaper, margin=1in]{geometry}
 \usepackage{fontspec}
+\usepackage{siunitx}
 \usepackage{tabu}
 \usepackage{xcolor}
 \usepackage{colortbl}
@@ -7,6 +8,14 @@
 \usepackage{xkeyval}
 
 \setmainfont{Arial}
+
+\newcolumntype{Z}
+	{S[
+		table-format=2.3,
+		table-alignment=right,
+		table-column-width=0.15\linewidth,
+		detect-all,
+	]@{}}
 
 \newcommand{\upb}[1]{\textbf{\MakeUppercase{#1}}}
 \newcommand{\header}[1]{\textbf{\Large #1}%
@@ -22,13 +31,13 @@
 	ssn, employeeID, hireDate, dept, deptID, payGroup, payRate,
 	supervisor, employeeSignature, supervisorSignature,
 	% -----
-	monDate, monIn, monOut, monTotal,
-	tuesDate, tuesIn, tuesOut, tuesTotal,
-	wedDate, wedIn, wedOut, wedTotal,
+	monDate,   monIn,   monOut,   monTotal,
+	tuesDate,  tuesIn,  tuesOut,  tuesTotal,
+	wedDate,   wedIn,   wedOut,   wedTotal,
 	thursDate, thursIn, thursOut, thursTotal,
-	friDate, friIn, friOut, friTotal,
-	satDate, satIn, satOut, satTotal,
-	sunDate, sunIn, sunOut, sunTotal,
+	friDate,   friIn,   friOut,   friTotal,
+	satDate,   satIn,   satOut,   satTotal,
+	sunDate,   sunIn,   sunOut,   sunTotal,
 	}
 
 \presetkeys{timesheet}{
@@ -87,14 +96,20 @@
 	\begingroup
 	\newcommand{\key}[1]{\@ifundefined{cmdKV@timesheet@##1}{}{%
 		\csname cmdKV@timesheet@##1\endcsname}}%
-	\newcommand{\dayRow}[2]{##1 & \key{##2Date} & \key{##2In} & \key{##2Out} &
-		\key{##2Total} \\}%
+	\newcommand{\dayRow}[2]
+		{##1
+		& \key{##2Date}
+		& \key{##2In}
+		& \key{##2Out}
+		& \key{##2Total} \\}%
 	\noindent
-	\begin{tabu} to \linewidth{@{}|X|X|X|X|X|@{}}
+	\begin{tabu} to \linewidth{@{}|X|X|X[r]|X[r]|Z|@{}}
 	\hline
 	\everyrow{\hline}
-		& Date & Time In & Time Out & Total \\
-		&      &         &          & \\
+		& Date  & \multicolumn{1}{l|}{Time In}
+			& \multicolumn{1}{l|}{Time Out}
+			& \multicolumn{1}{l|@{}}{Total} \\
+		& & & & \\
 		\dayRow{Monday}{mon}
 		\dayRow{Tuesday}{tues}
 		\dayRow{Wednesday}{wed}
