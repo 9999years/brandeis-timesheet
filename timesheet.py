@@ -37,17 +37,22 @@ class Weekday(enum.Enum):
     def __int__(self):
         return self.value[0]
 
+    def next(self, dt: datetime) -> datetime:
+        days = (int(self) - int(Weekday.from_datetime(dt)) - 1) % len(Weekday) + 1
+        # days = len(Weekday) - (int(Weekday.from_datetime(dt)) + int(self) - 1) % len(Weekday)
+        return dt + timedelta(days=days)
+
     @property
-    def abbr(self):
+    def abbr(self) -> str:
         return self.value[1]
 
     @classmethod
-    def from_int(cls, weekday: int):
+    def from_int(cls, weekday: int) -> 'Weekday':
         return next(filter(lambda wd: int(wd) == weekday,
                            cls.__members__.values()))
 
     @classmethod
-    def from_datetime(cls, dt: datetime):
+    def from_datetime(cls, dt: datetime) -> 'Weekday':
         return cls.from_int(dt.weekday())
 
 
@@ -73,6 +78,8 @@ class Calendar:
 
 WEEK_START = Weekday.MONDAY
 WEEK_END = Weekday.SUNDAY
+TIMESHEET_GEN = Weekday.THURSDAY
+TIMESHEET_DUE = Weekday.MONDAY
 
 
 def date_range(start: datetime, end: datetime) -> Iterator[datetime]:
@@ -188,34 +195,55 @@ def timesheet_data(during=None) -> dict:
         return filter(time_in_day, events)
 
     ret = {
-        'name': config('NAME'),
-        'supervisor': config('SUPERVISOR'),
-        'employeeSignature': config('SIGNATURE'),
-        'dept': config('DEPARTMENT'),
-        'payRate': config('PAY_RATE'),
-        'hireDate': config('HIRE_DATE'),
         'start': start.date().isoformat(),
         'end': end.date().isoformat(),
+        'due': TIMESHEET_DUE.next(start).date().isoformat(),
+        'name': config('NAME'),
+        'employeeRcd': config('RCD'),
+        'serviceDate': config('SERVICE_DATE'),
+        'employeeID': config('EMPLOYEE_ID'),
+        'dept': config('DEPARTMENT'),
+        'paygroup': config('PAYGROUP'),
+        'payRate': config('PAY_RATE'),
+        'position': config('POSITION'),
+        'status': config('STATUS'),
+        'fiscalYear': str(start.year),
+        'awardAmt': config('AWARD_AMT'),
+        'awardBal': config('AWARD_BAL'),
+        'fundingDate': TIMESHEET_GEN.next(start).date().isoformat(),
+        'fund': config('FUND'),
+        'program': config('PROGRAM'),
+        'fundAcct': config('ACCOUNT'),
+        'dist': config('DISTRIBUTION'),
+        'employeeSignatureDate': datetime.now().date().isoformat(),
+        'supervisor': config('SUPERVISOR'),
+        'employeeSignature': config('SIGNATURE'),
     }
+
 
     total = timedelta()
     for day in date_range(start, end):
         abbr = Weekday.from_datetime(day).abbr
+        shift_counter = 1
+
+        def inKey() -> str:
+            return abbr + 'In' + str(shift_counter)
+
+        def outKey() -> str:
+            return abbr + 'Out' + str(shift_counter)
+
         today_events = filter_events(day)
-        inTimes = []
-        outTimes = []
         day_total = timedelta()
         for event in today_events:
             start, end = event_time(event)
-            inTimes.append(format_time(start))
-            outTimes.append(format_time(end))
+            ret[inKey()] = format_time(start)
+            ret[outKey()] = format_time(end)
             day_total += end - start
+            shift_counter += 1
 
         ret[abbr + 'Date'] = day.date().isoformat()
         total += day_total
         if day_total:
-            ret[abbr + 'In'] = ', '.join(inTimes)
-            ret[abbr + 'Out'] = ', '.join(outTimes)
             ret[abbr + 'Total'] = format_timedelta(day_total)
 
     ret['totalHours'] = format_timedelta(total)

@@ -1,4 +1,10 @@
-\usepackage[letterpaper, margin=1in]{geometry}
+\usepackage[
+	letterpaper,
+	margin=0.3in,
+	top=0.15in,
+	left=0.25in,
+	right=0.4in,
+]{geometry}
 \usepackage{fontspec}
 \usepackage{siunitx}
 \usepackage{tabu}
@@ -7,19 +13,20 @@
 \usepackage{graphicx}
 \usepackage{xkeyval}
 
-\setmainfont{Arial}
+\newfontface{\symb}{Segoe UI Symbol}
+\setmainfont{Helvetica Neue LT Std}
 
 \newcolumntype{Z}
 	{S[
 		table-format=2.3,
 		table-alignment=right,
-		table-column-width=0.15\linewidth,
+		table-column-width=0.08\linewidth,
 		detect-all,
 	]@{}}
 
 \newcommand{\upb}[1]{\textbf{\MakeUppercase{#1}}}
-\newcommand{\header}[1]{\textbf{\Large #1}%
-	\par\vspace{0.25em}\hrule height 1pt \vspace{-0.75em}}
+\newcommand{\header}[2][-0.2em]{\vspace{0.25em}{\Large #2}%
+	\par\vspace{#1}\hrule height 1pt\vspace{0.15em}}
 
 \def\hrulefill{\leavevmode\leaders\hrule height 1pt\hfill\kern\z@}
 \newcommand\dunderline[3][-1pt]{{%
@@ -27,89 +34,130 @@
   \ooalign{\copy0\cr\rule[\dimexpr#1-#2\relax]{\wd0}{#2}}}}
 \newcommand{\filledin}[2][5em]{\dunderline{1pt}{\rlap{#2}\hskip\dimexpr#1}}
 
-\define@cmdkeys{timesheet}{start, end, name, totalHours,
-	ssn, employeeID, hireDate, dept, deptID, payGroup, payRate,
-	supervisor, employeeSignature, supervisorSignature,
+\define@cmdkeys{timesheet}{
+	start, end, due, name, totalHours, employeeRcd, serviceDate, ssn,
+	employeeID, dept, paygroup, payRate, position, status, fiscalYear,
+	awardAmt, awardBal, supervisor, employeeSignature,
+	supervisorSignature, fundingDate, fundAcct, fund, program,
+	projectID, dist, employeeSignatureDate, supervisorSignatureDate,
 	% -----
-	monDate,   monIn,   monOut,   monTotal,
-	tuesDate,  tuesIn,  tuesOut,  tuesTotal,
-	wedDate,   wedIn,   wedOut,   wedTotal,
-	thursDate, thursIn, thursOut, thursTotal,
-	friDate,   friIn,   friOut,   friTotal,
-	satDate,   satIn,   satOut,   satTotal,
-	sunDate,   sunIn,   sunOut,   sunTotal,
+	monDate,    monTotal,    monIn1,    monOut1,   monIn2,    monOut2,   monIn3,    monOut3,
+	tuesDate,   tuesTotal,   tuesIn1,   tuesOut1,  tuesIn2,   tuesOut2,  tuesIn3,   tuesOut3,
+	wedDate,    wedTotal,    wedIn1,    wedOut1,   wedIn2,    wedOut2,   wedIn3,    wedOut3,
+	thursDate,  thursTotal,  thursIn1,  thursOut1, thursIn2,  thursOut2, thursIn3,  thursOut3,
+	friDate,    friTotal,    friIn1,    friOut1,   friIn2,    friOut2,   friIn3,    friOut3,
+	satDate,    satTotal,    satIn1,    satOut1,   satIn2,    satOut2,   satIn3,    satOut3,
+	sunDate,    sunTotal,    sunIn1,    sunOut1,   sunIn2,    sunOut2,   sunIn3,    sunOut3,
 	}
 
 \presetkeys{timesheet}{
 	ssn={},
 	employeeID={},
-	hireDate={},
+	employeeRcd={},
+	serviceDate={},
 	dept={},
-	deptID={},
-	payGroup={},
+	paygroup={},
+	status={},
+	position={},
 	payRate={},
 	supervisor={},
+	fiscalYear={},
+	awardAmt={},
+	awardBal={},
+	fundAcct={},
+	fund={},
+	program={},
+	projectID={},
+	dist={},
 }{}
 \newcommand{\timesheet}[1]{%
 	\setkeys{timesheet}{#1}%
 	\thispagestyle{empty}%
-	\setlength{\parindent}{0.1in}%
-	\setlength{\parskip}{1em}%
+	\setlength{\parindent}{0.0in}%
+	\setlength{\parskip}{0.5em}%
 	\setlength{\arrayrulewidth}{1pt}%
+	\footnotesize
+	%\small
 
-	\begin{center}%
-		\Large\upb{Brandeis University}%
-	\end{center}%
+	\header[-0.25em]{Employee Timesheet\hfill Brandeis
+	University\hspace*{0.15in}}
 
-	\header{\MakeUppercase{Employee Timesheet}}%
-	\noindent
-	{\footnotesize this timesheet should be used when employee does not show up
-	in time collection system.}
+	Reporting period \cmdKV@timesheet@start\ through
+	\cmdKV@timesheet@end\
+	\hfill
+	\textbf{Time Administrators Must Approve On-Line by
+	\cmdKV@timesheet@due\ at 12:00 00}
+	\\
+	\hspace*{0pt}
+	\hfill
+	\textbf{{\symb ☑} Entered On-Line}
 
-	\textbf{Reporting period \filledin[6em]{\cmdKV@timesheet@start} through
-		\filledin[6em]{\cmdKV@timesheet@end}}%
+	\extrarowsep=-0.1em
+	\tabulinestyle{0.25pt}
 
-	\vspace{1em}%
-
-	Fill out as much as the information below as possible.
-	\vspace{-1em}%
-
-	\noindent
-	\begin{tabu} to \linewidth {@{}|>{\raggedright}X[4]>{\raggedright}X[3]|@{}}
-	\hline
+	\begin{tabu} to 0.45\linewidth{@{}|@{}X[1]>{\bfseries\raggedright}X[2]|@{}}
+	\tabucline-
 	\rowfont[l]{\bfseries}
 	\rowcolor{black!20}
-	Personal Data & Job Data \\
-	\hline
-	Name: \cmdKV@timesheet@name              & Department: \cmdKV@timesheet@dept \\
-	SSN: \cmdKV@timesheet@ssn                & Dept.\ ID: \cmdKV@timesheet@deptID \\
-	Employee ID: \cmdKV@timesheet@employeeID & Paygroup: \cmdKV@timesheet@payGroup \\
-	Date of Hire: \cmdKV@timesheet@hireDate  & Rate: \cmdKV@timesheet@payRate \\
-	                                         & Supervisor: \cmdKV@timesheet@supervisor \\
-	\hline
+	Personal Data & \\
+	\tabucline-
+	Name & \cmdKV@timesheet@name \\
+	Employee ID & \cmdKV@timesheet@employeeID \\
+	Employee Rcd & \cmdKV@timesheet@employeeRcd \\
+	Service Date & \cmdKV@timesheet@serviceDate \\
+	Supervisor & \cmdKV@timesheet@supervisor \\
+	\tabucline-
+	\end{tabu}
+	\hfill
+	\begin{tabu} to 0.545\linewidth{@{}|@{}X[1]>{\bfseries}X[2]|@{}}
+	\tabucline-
+	\rowfont[l]{\bfseries}
+	\rowcolor{black!20}
+	Job Data & \\
+	\tabucline-
+	Department & \cmdKV@timesheet@dept \\
+	Position & \cmdKV@timesheet@position \\
+	Paygroup & \cmdKV@timesheet@paygroup \\
+	Status & \cmdKV@timesheet@status \\
+	& Hourly Rate: \$ \cmdKV@timesheet@payRate \\
+	\tabucline-
 	\end{tabu}
 
-	\vspace{0.5em}%
-	{\large Time Entry}%
-	\vspace{-1em}%
+	\begin{tabu} to 0.45\linewidth{@{}|@{}X[1]>{\bfseries}X[2]|@{}}
+	\tabucline-
+	\multicolumn{2}{|@{}l@{}|}{\cellcolor{black!20}\bfseries
+		Work-Study Information} \\
+	\tabucline-
+	\tabuphantomline
+	Fiscal Year & \cmdKV@timesheet@fiscalYear \\
+	Award Amt & \cmdKV@timesheet@awardAmt \\
+	Award Bal & \cmdKV@timesheet@awardBal \\
+	\tabucline-
+	\end{tabu}
 
+	\header{Time Entry}
+
+	\raisebox{2em}{\begin{minipage}[b]{\linewidth}
 	\begingroup
+	\tabulinesep=^0pt_1em
 	\newcommand{\key}[1]{\@ifundefined{cmdKV@timesheet@##1}{}{%
 		\csname cmdKV@timesheet@##1\endcsname}}%
 	\newcommand{\dayRow}[2]
 		{##1
 		& \key{##2Date}
-		& \key{##2In}
-		& \key{##2Out}
+		& \key{##2In1} & \key{##2Out1}
+		& \key{##2In2} & \key{##2Out2}
+		& \key{##2In3} & \key{##2Out3}
 		& \key{##2Total} \\}%
 	\noindent
-	\begin{tabu} to \linewidth{@{}|X|X|X[r]|X[r]|Z|@{}}
-	\hline
-	\everyrow{\hline}
-		& Date  & \multicolumn{1}{l|}{Time In}
-			& \multicolumn{1}{l|}{Time Out}
-			& \multicolumn{1}{l|@{}}{Total} \\
-		& & & & \\
+	\begin{tabu} to \linewidth{@{}|@{}X@{}|@{}X@{}|@{}X[r]@{}|@{}X[r]@{}|@{}X[r]@{}|@{}X[r]@{}|@{}X[r]@{}|@{}X[r]@{}|@{}Z@{}|@{}}
+		\tabucline-
+		\everyrow{\tabucline-}
+		& Date
+			& \multicolumn{1}{@{}l|}{Time In} & \multicolumn{1}{@{}l|}{Time Out}
+			& \multicolumn{1}{@{}l|}{Time In} & \multicolumn{1}{@{}l|}{Time Out}
+			& \multicolumn{1}{@{}l|}{Time In} & \multicolumn{1}{@{}l|}{Time Out}
+			& \multicolumn{1}{@{}l|@{}}{Total} \\
 		\dayRow{Monday}{mon}
 		\dayRow{Tuesday}{tues}
 		\dayRow{Wednesday}{wed}
@@ -117,20 +165,70 @@
 		\dayRow{Friday}{fri}
 		\dayRow{Saturday}{sat}
 		\dayRow{Sunday}{sun}
+		\everyrow{}
+		\multicolumn{9}{l}{} \\ \tabuphantomline
+		\tabucline{9-9}
+		\multicolumn{8}{l}{} & \multicolumn{1}{|l|}{} \\ \tabuphantomline
+		\multicolumn{5}{l}{} &
+		\multicolumn{3}{r}{Total Hours Reported\hspace{0.25em}} &
+		\multicolumn{1}{|@{}r@{}|}{\cmdKV@timesheet@totalHours}
+		\\
+		\tabucline{9-9}
+		\tabuphantomline
 	\end{tabu}
 	\endgroup
+	\end{minipage}}%
+	%\hfill
+	%\raisebox{-2em}{\begin{minipage}[c]{0.15\linewidth}
+		%\Large
+		%5 min=.08 \\
+		%10 min=.17 \\
+		%15 min=.25 \\
+		%20 min=.33 \\
+		%25 min=.42 \\
+		%30 min=.5 \\
+		%35 min=.58 \\
+		%40 min=.67 \\
+		%45 min=.75 \\
+		%50 min=.83 \\
+		%55 min=.92 \\
+	%\end{minipage}}
 
-	\begin{flushright}%
-		\noindent
-		\textbf{Total Hours Worked:
-			\filledin{\cmdKV@timesheet@totalHours}}%
-		\mbox{\hskip 1em}%
-	\end{flushright}%
+	\header{Current Position Funding}
+	As Of \cmdKV@timesheet@fundingDate
 
-	\noindent
-	\header{Signatures}%
+	\tabulinesep=^0.75em_0pt
+	\begin{tabu} to \linewidth{@{}XX[2]X[2]XXX[2]X@{}}
+		FY & Department ID & Account Number & Fund & Program & Project ID & Dist \% \\
+		\hline
+		\rowfont{\bfseries}
+		\cmdKV@timesheet@fiscalYear &
+		\cmdKV@timesheet@dept &
+		\cmdKV@timesheet@fundAcct &
+		\cmdKV@timesheet@fund &
+		\cmdKV@timesheet@program &
+		\cmdKV@timesheet@projectID &
+		\cmdKV@timesheet@dist
+	\end{tabu}
 
-	\noindent
+	%\vspace{0.5em}
+	%{\large
+	%PLEASE REMEMBER: \\
+	%*Add your supervisors name in a prominent position along with the
+	%class if applicable. \\
+	%*Fill out the total for each day \\
+	%*Fill out the grand total \\
+	%*Use PEN \\
+	%*Sign it \\
+	%*Submit by Monday at 10:00AM \\
+	%*Timesheets that break any of these rules or have math errors will
+	%be returned for correction. \\
+	%This may delay payment.}
+	%\vspace{0.5em}
+
+	\vspace{2em}
+	\header{Authorization\vphantom{y}}%
+
 	We certify that this report correctly reflects all time worked for the
 	period.
 
@@ -138,20 +236,20 @@
 
 	\begingroup
 	\newcommand{\signature}[1]{\@ifundefined{cmdKV@timesheet@##1}{}{%
-		\edef\@fname{\csname cmdKV@timesheet@##1\endcsname}
+		\edef\@fname{\csname cmdKV@timesheet@##1\endcsname}%
 		\raisebox{-0.5em}{\rlap{\smash{\includegraphics[width=1.5in]{\@fname}}}}}}%
+	\newcommand{\belowrule}[2][0.3\linewidth]%
+		{\rlap{\raisebox{-1em}{##2}}\rule{##1}{1pt}}
 
-	Employee:
 	\signature{employeeSignature}%
-	\rule{0.75\linewidth}{1pt}%
-
-	\vspace{1.5em}
-
-	Supervisor:
+	\belowrule{Employee Signature (Required)}
+	\belowrule[6em]{Date}
+	\hskip 0.75em
 	\signature{supervisorSignature}%
-	\rule{0.75\linewidth}{1pt}%
+	\belowrule{Supervisor Signature (Required)}
+	\belowrule[6em]{Date}
 	\endgroup
 
-	{\footnotesize Return to Payroll (MS110) no later than \textbf{12 noon} on
-	the Tuesday following the payperiod.}%
+	This timesheet must be authorized and submitted to the Time
+	Administrator by the reporting period end date.
 }
