@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import List, Iterator
 from typing import Tuple, Optional
+from argparse import ArgumentParser
 
 from decouple import config
 
@@ -79,7 +80,7 @@ class Calendar:
 WEEK_START = Weekday.MONDAY
 WEEK_END = Weekday.SUNDAY
 TIMESHEET_GEN = Weekday.THURSDAY
-TIMESHEET_DUE = Weekday.MONDAY
+TIMESHEET_DUE = Weekday.TUESDAY
 
 
 def date_range(start: datetime, end: datetime) -> Iterator[datetime]:
@@ -278,12 +279,19 @@ def timesheet_doc(data: dict, cmd_name='timesheet') -> str:
             + timesheet_cmd(data, cmd_name)
             + DOCUMENT_SUFFIX)
 
+def argparser() -> ArgumentParser:
+    def localdate(date: str) -> datetime:
+        return datetime.fromisoformat(date).astimezone()
+    parser = ArgumentParser()
+    parser.add_argument('-d', '--date', default=None, type=localdate)
+    return parser
 
 def main():
     import sys
     sys.stdin.reconfigure(encoding='utf-8')
     sys.stdout.reconfigure(encoding='utf-8')
-    print(timesheet_doc(timesheet_data()))
+    args = argparser().parse_args()
+    print(timesheet_doc(timesheet_data(during=args.date)))
 
 
 if __name__ == '__main__':
