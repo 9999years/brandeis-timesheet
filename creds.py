@@ -1,5 +1,5 @@
 import httplib2
-from apiclient import discovery
+from apiclient import discovery, discovery_cache
 import oauth2client as oauth
 import os
 from decouple import config, Csv
@@ -28,15 +28,18 @@ def credentials():
     return credentials
 
 
-def build_creds(api='calendar', version='v3'):
+def build_creds(api='calendar', version='v3', **kwargs):
     creds = credentials()
     http = creds.authorize(httplib2.Http())
-    service = discovery.build(api, version, http=http)
+    service = discovery.build(api, version, http=http, **kwargs)
     return creds, http, service
 
 
-def build_service(api='calendar', version='v3'):
-    creds, http, service = build_creds(api, version)
+def build_service(api='calendar', version='v3', use_cache=False):
+    cache = None
+    if use_cache:
+        cache = discovery_cache.autodetect()
+    creds, http, service = build_creds(api, version, cache=cache)
     return service
 
 
