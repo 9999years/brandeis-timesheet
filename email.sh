@@ -3,5 +3,5 @@ set -e
 
 # cron sets the path to like nothing so
 PATH="/home/pi/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-./render.sh > /dev/null
-python3.7 make_email.py | sendmail -t > /dev/null
+./render.sh
+python3.7 make_email.py --send
