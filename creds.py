@@ -1,46 +1,53 @@
-import httplib2
-from apiclient import discovery, discovery_cache
-import oauth2client as oauth
-import os
+import os.path
+import pickle
+
+from googleapiclient.discovery import build, Resource
+from googleapiclient import discovery_cache
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
 from decouple import config, Csv
 
 
-def credentials():
-    """Gets valid user credentials from storage.
+DEFAULT_PICKLE_FILE = config('GOOGLE_TOKEN_PICKLE', default='token.pickle')
 
-    If nothing has been stored, or if the stored credentials are invalid,
-    the OAuth2 flow is completed to obtain the new credentials.
-
-    Returns:
-        Credentials, the obtained credential.
-    """
-    cred_path = os.path.abspath(config('GOOGLE_CREDENTIALS'))
-    store = oauth.file.Storage(cred_path)
-    credentials = store.get()
-    if not credentials or credentials.invalid:
-        flow = oauth.client.flow_from_clientsecrets(
-            config('GOOGLE_CLIENT_SECRETS'),
-            config('GOOGLE_SCOPES', cast=Csv())
-        )
-        flow.user_agent = config('APP_NAME')
-        credentials = oauth.tools.run_flow(flow, store, None)
-        print('Storing credentials')
-    return credentials
-
-
-def build_creds(api='calendar', version='v3', **kwargs):
-    creds = credentials()
-    http = creds.authorize(httplib2.Http())
-    service = discovery.build(api, version, http=http, **kwargs)
-    return creds, http, service
+def credentials(pickle_file: str = DEFAULT_PICKLE_FILE) -> Credentials:
+    creds = None
+    # The file token.pickle stores the user's access and refresh tokens, and is
+    # created automatically when the authorization flow completes for the first
+    # time.
+    if os.path.exists(pickle_file):
+        with open(pickle_file, 'rb') as token:
+            creds = pickle.load(token)
+    # If there are no (valid) credentials available, let the user log in.
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            # https://developers.google.com/api-client-library/python/guide/aaa_client_secrets
+            flow = InstalledAppFlow.from_client_secrets_file(
+                config('GOOGLE_CLIENT_SECRETS'),
+                config('GOOGLE_SCOPES', cast=Csv()))
+            flow.user_agent = config('APP_NAME')
+            creds = flow.run_local_server()
+        # Save the credentials for the next run
+        with open(pickle_file, 'wb') as token:
+            pickle.dump(creds, token)
+    return creds
 
 
-def build_service(api='calendar', version='v3', use_cache=False):
-    cache = None
-    if use_cache:
-        cache = discovery_cache.autodetect()
-    creds, http, service = build_creds(api, version, cache=cache)
-    return service
+def build_service(api, version, creds: Credentials = None) -> Resource:
+    if creds is None:
+        creds = credentials()
+    return build(api, version, credentials=creds)
+
+
+def build_calendar(version='v3') -> Resource:
+    return build_service('calendar', version)
+
+
+def build_gmail(version='v1') -> Resource:
+    return build_service('gmail', version)
 
 
 if __name__ == '__main__':
