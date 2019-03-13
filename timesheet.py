@@ -113,7 +113,7 @@ def work_week(during: datetime = None) -> Tuple[datetime, datetime]:
 
 @functools.lru_cache()
 def calendars() -> List[Calendar]:
-    service = creds.build_service()
+    service = creds.build_calendar()
     return [Calendar(**cal)
             for cal
             in service.calendarList().list().execute()['items']]
@@ -147,7 +147,7 @@ def events(calendar_id: str, start: datetime, end: datetime, **kwargs) -> List[d
     }
 
     args.update(kwargs)
-    service = creds.build_service()
+    service = creds.build_calendar()
     events = service.events().list(**args).execute()
     return events.get('items', [])
 
