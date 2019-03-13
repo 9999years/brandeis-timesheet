@@ -40,7 +40,6 @@ class Weekday(enum.Enum):
 
     def next(self, dt: datetime) -> datetime:
         days = (int(self) - int(Weekday.from_datetime(dt)) - 1) % len(Weekday) + 1
-        # days = len(Weekday) - (int(Weekday.from_datetime(dt)) + int(self) - 1) % len(Weekday)
         return dt + timedelta(days=days)
 
     @property
@@ -79,8 +78,8 @@ class Calendar:
 
 WEEK_START = Weekday.MONDAY
 WEEK_END = Weekday.SUNDAY
-TIMESHEET_GEN = Weekday.THURSDAY
-TIMESHEET_DUE = Weekday.TUESDAY
+TIMESHEET_GEN = Weekday.WEDNESDAY
+TIMESHEET_DUE = Weekday.MONDAY
 
 
 def date_range(start: datetime, end: datetime) -> Iterator[datetime]:
