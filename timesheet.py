@@ -178,7 +178,7 @@ def format_float(f: float) -> str:
 
 
 def format_timedelta(td: timedelta) -> str:
-    return format_float(td.seconds / 3600)
+    return format_float(td.days * 24 + td.seconds / 3600)
 
 
 def timesheet_data(during=None) -> dict:
