@@ -291,7 +291,12 @@ def main():
     sys.stdin.reconfigure(encoding='utf-8')
     sys.stdout.reconfigure(encoding='utf-8')
     args = argparser().parse_args()
-    print(timesheet_doc(timesheet_data(during=args.date)))
+    data = timesheet_data(during=args.date)
+    if data['totalHours'] <= 0.01:
+        # no work hours
+        sys.exit(1)
+    else:
+        print(timesheet_doc(data))
 
 
 if __name__ == '__main__':
